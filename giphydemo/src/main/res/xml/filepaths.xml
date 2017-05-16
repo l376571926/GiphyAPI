@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resource xmlns:android="http://schemas.android.com/apk/res/android">
     <paths>
+        <!--
         <cache-path
             name="my_image"
-            path="/" />
+            path="/image_manager_disk_cache/" />
         <external-path
             name="my_image"
             path="/" />
+        -->
+        <root-path
+            name="my_image"
+            path="/storage/emulated/0/" />
     </paths>
 </resource>

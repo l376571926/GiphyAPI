@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
+import android.support.v4.content.FileProvider;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageView;
@@ -76,22 +77,36 @@ public class GifViewHolder extends RecyclerView.ViewHolder implements View.OnCli
                     .load(url)
                     .downloadOnly(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
                     .get();
+//            KLog.e(file.getPath());///data/user/0/com.aoemo.giphydemo/cache/image_manager_disk_cache/28e38324c2b3d08554fc6aa9b26824be9743fae94b7814e83208596f503e3803.0
+//            Uri uri = FileProvider.getUriForFile(mContext, AUTHORITY, file);//直接从Glide的缓存分享
 
-            String fileName = file.getPath().substring(file.getPath().lastIndexOf("/"), file.getPath().length());
+            String fileName = file.getPath().substring(file.getPath().lastIndexOf("/") + 1, file.getPath().length());
             String newFilePath = Environment.getExternalStorageDirectory().getPath() + File.separator + fileName;
-
             copyFile(file.getPath(), newFilePath);
+            File file1 = new File(newFilePath);
+            /**
+             * 可以分享到自己写的demo和微信，但不可以分享到QQ
+             */
+            Uri uri = FileProvider.getUriForFile(mContext, AUTHORITY, file1);//将缓存复制到外存储再分享
+            /**
+             * 可以同时分享到：自己写的demo，微信，QQ
+             */
+//            Uri uri = Uri.fromFile(file1);
 
-//            Uri uri = FileProvider.getUriForFile(mContext, AUTHORITY, new File(newFilePath));
-            Uri uri = Uri.fromFile(new File(newFilePath));
-
+            /**
+             * FileProvider.getUriForFile(mContext, AUTHORITY, file1)---->content://com.aoemo.giphydemo/my_image/storage/emulated/0/28e38324c2b3d08554fc6aa9b26824be9743fae94b7814e83208596f503e3803.0
+             * Uri.fromFile(file1)---->file:///storage/emulated/0/28e38324c2b3d08554fc6aa9b26824be9743fae94b7814e83208596f503e3803.0
+             */
+            KLog.e("要分享的uri----->" + uri);
             Intent intent = new Intent(Intent.ACTION_SEND);
             //方式1
-            intent.putExtra(Intent.EXTRA_STREAM, uri);
-            intent.setType("image/gif");
+            intent.putExtra(Intent.EXTRA_STREAM, uri);//ClipData
+            intent.setType("image/*");
             //方式2
-            intent.setDataAndType(uri, "image/gif");
+            intent.setDataAndType(uri, "image/*");//Data
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
             mContext.startActivity(intent);
 
         } catch (InterruptedException | ExecutionException e) {
@@ -111,7 +126,7 @@ public class GifViewHolder extends RecyclerView.ViewHolder implements View.OnCli
     public void copyFile(String oldPath, String newPath) {
         try {
             int bytesum = 0;
-            int byteread = 0;
+            int byteread;
             File oldfile = new File(oldPath);
             if (oldfile.exists()) { //文件存在时
                 InputStream inStream = new FileInputStream(oldPath); //读入原文件
@@ -126,7 +141,7 @@ public class GifViewHolder extends RecyclerView.ViewHolder implements View.OnCli
                 inStream.close();
             }
         } catch (Exception e) {
-            System.out.println("复制单个文件操作出错");
+            KLog.e("复制单个文件操作出错----->" + e);
             e.printStackTrace();
 
         }
